@@ -62,7 +62,8 @@ type OrderRequest struct {
 }
 
 type PurchaseUnit struct {
-	Amount Amount `json:"amount"`
+	Amount      Amount `json:"amount"`
+	ReferenceID string `json:"reference_id"`
 }
 
 type Amount struct {
@@ -124,16 +125,17 @@ func (config *Config) Auth() (*AuthResult, error) {
 }
 
 // CreateOrder calls PayPal to set up a transaction.
-func (config *Config) CreateOrder(auth *AuthResult, euroCents int) (*GenerateOrderResponse, error) {
+func (config *Config) CreateOrder(auth *AuthResult, refID string, euroCents int) (*GenerateOrderResponse, error) {
 
 	orderRequest := &OrderRequest{
 		Intent: "CAPTURE",
 		PurchaseUnits: []PurchaseUnit{
 			PurchaseUnit{
-				Amount{
+				Amount: Amount{
 					CurrencyCode: "EUR",
 					Value:        float64(euroCents) / 100.0,
 				},
+				ReferenceID: refID,
 			},
 		},
 		ApplicationContext: ApplicationContext{
