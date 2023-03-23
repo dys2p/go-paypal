@@ -3,6 +3,7 @@ package paypal
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,16 +22,32 @@ type Config struct {
 // Load unmarshals a json config file into a Config.
 // If the file doesn't exist, it is created and an error is returned.
 func Load(jsonPath string) (*Config, error) {
-	var config = &Config{}
 	data, err := os.ReadFile(jsonPath)
-	switch {
-	case err == nil:
-		return config, json.Unmarshal(data, config)
-	case os.IsNotExist(err):
+	if os.IsNotExist(err) {
 		return nil, Create(jsonPath)
-	default:
+	}
+	if err != nil {
 		return nil, err
 	}
+
+	var config = &Config{}
+	if err := json.Unmarshal(data, config); err != nil {
+		return nil, err
+	}
+
+	if config.OAuthAPI == "" {
+		return nil, errors.New("missing oauth-api in paypal config file")
+	}
+	if config.OrderAPI == "" {
+		return nil, errors.New("missing order-api in paypal config file")
+	}
+	if config.ClientID == "" {
+		return nil, errors.New("missing client-id in paypal config file")
+	}
+	if config.Secret == "" {
+		return nil, errors.New("missing secret in paypal config file")
+	}
+	return config, nil
 }
 
 // Create creates an empty json config file with empty values and chmod 600, so someone can fill in easily.
