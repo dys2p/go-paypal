@@ -82,8 +82,8 @@ type OrderRequest struct {
 type PurchaseUnit struct {
 	Amount      Amount `json:"amount"`
 	Description string `json:"description"` // "[ 1 .. 127 ] characters: The purchase description."
-	CustomID    string `json:"custom_id"`   // "[ 1 .. 127 ] characters: The API caller-provided external ID. Used to reconcile API caller-initiated transactions with PayPal transactions. Appears in transaction and settlement reports."
 	InvoiceID   string `json:"invoice_id"`  // "[ 1 .. 127 ] characters: The API caller-provided external invoice ID for this order. Appears in both the payer's transaction history and the emails that the payer receives."
+	CustomID    string `json:"custom_id"`   // "[ 1 .. 127 ] characters: The API caller-provided external ID. Used to reconcile API caller-initiated transactions with PayPal transactions. Appears in transaction and settlement reports."
 }
 
 type Amount struct {
@@ -145,7 +145,7 @@ func (config *Config) Auth() (*AuthResult, error) {
 }
 
 // CreateOrder calls PayPal to set up a transaction.
-func (config *Config) CreateOrder(auth *AuthResult, description, customID, invoiceID string, euroCents int) (*GenerateOrderResponse, error) {
+func (config *Config) CreateOrder(auth *AuthResult, description, invoiceID, customID string, euroCents int) (*GenerateOrderResponse, error) {
 
 	orderRequest := &OrderRequest{
 		Intent: "CAPTURE",
@@ -156,8 +156,8 @@ func (config *Config) CreateOrder(auth *AuthResult, description, customID, invoi
 					Value:        float64(euroCents) / 100.0,
 				},
 				Description: description,
-				CustomID:    customID,
 				InvoiceID:   invoiceID,
+				CustomID:    customID,
 			},
 		},
 		ApplicationContext: ApplicationContext{
