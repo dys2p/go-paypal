@@ -80,10 +80,10 @@ type OrderRequest struct {
 
 // See https://developer.paypal.com/docs/api/orders/v2/#definition-purchase_unit
 type PurchaseUnit struct {
+	ReferenceID string `json:"reference_id,omitempty"` // "[ 1 .. 256 ] characters: The API caller-provided external ID for the purchase unit.", omitempty because paypal fails if it exists but is empty
+	Description string `json:"description"`            // "[ 1 .. 127 ] characters: The purchase description."
+	InvoiceID   string `json:"invoice_id"`             // "[ 1 .. 127 ] characters: The API caller-provided external invoice ID for this order. Appears in both the payer's transaction history and the emails that the payer receives."
 	Amount      Amount `json:"amount"`
-	Description string `json:"description"` // "[ 1 .. 127 ] characters: The purchase description."
-	InvoiceID   string `json:"invoice_id"`  // "[ 1 .. 127 ] characters: The API caller-provided external invoice ID for this order. Appears in both the payer's transaction history and the emails that the payer receives."
-	CustomID    string `json:"custom_id"`   // "[ 1 .. 127 ] characters: The API caller-provided external ID. Used to reconcile API caller-initiated transactions with PayPal transactions. Appears in transaction and settlement reports."
 }
 
 type Amount struct {
@@ -145,7 +145,7 @@ func (config *Config) Auth() (*AuthResult, error) {
 }
 
 // CreateOrder calls PayPal to set up a transaction.
-func (config *Config) CreateOrder(auth *AuthResult, description, invoiceID, customID string, euroCents int) (*GenerateOrderResponse, error) {
+func (config *Config) CreateOrder(auth *AuthResult, description, invoiceID, referenceID string, euroCents int) (*GenerateOrderResponse, error) {
 
 	orderRequest := &OrderRequest{
 		Intent: "CAPTURE",
@@ -157,7 +157,7 @@ func (config *Config) CreateOrder(auth *AuthResult, description, invoiceID, cust
 				},
 				Description: description,
 				InvoiceID:   invoiceID,
-				CustomID:    customID,
+				ReferenceID: referenceID,
 			},
 		},
 		ApplicationContext: ApplicationContext{
@@ -207,17 +207,31 @@ type CaptureRequest struct {
 	OrderID string `json:"orderID"`
 }
 
+// Generated 2023-11-22 with json-to-go from docs (Shipping) and a real response (the rest).
+// Note that PurchaseUnits does not contain the custom_id.
 type CaptureResponse struct {
 	ID            string `json:"id"`
 	Status        string `json:"status"`
+	PaymentSource struct {
+		Paypal struct {
+			EmailAddress  string `json:"email_address"`
+			AccountID     string `json:"account_id"`
+			AccountStatus string `json:"account_status"`
+			Name          struct {
+				GivenName string `json:"given_name"`
+				Surname   string `json:"surname"`
+			} `json:"name"`
+			Address struct {
+				CountryCode string `json:"country_code"`
+			} `json:"address"`
+		} `json:"paypal"`
+	} `json:"payment_source"`
 	PurchaseUnits []struct {
 		ReferenceID string `json:"reference_id"`
 		Shipping    struct {
-			Name struct {
-				FullName string `json:"full_name"`
-			} `json:"name"`
 			Address struct {
 				AddressLine1 string `json:"address_line_1"`
+				AddressLine2 string `json:"address_line_2"`
 				AdminArea2   string `json:"admin_area_2"`
 				AdminArea1   string `json:"admin_area_1"`
 				PostalCode   string `json:"postal_code"`
@@ -251,7 +265,8 @@ type CaptureResponse struct {
 						Value        string `json:"value"`
 					} `json:"net_amount"`
 				} `json:"seller_receivable_breakdown"`
-				Links []struct {
+				InvoiceID string `json:"invoice_id"`
+				Links     []struct {
 					Href   string `json:"href"`
 					Rel    string `json:"rel"`
 					Method string `json:"method"`
