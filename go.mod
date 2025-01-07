@@ -1,3 +1,3 @@
-module github.com/dys2p/paypal
+module github.com/dys2p/go-paypal
 
 go 1.17

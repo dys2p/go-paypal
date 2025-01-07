@@ -1,6 +1,11 @@
 # A PayPal API library written in Go
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/dys2p/go-paypal.svg)](https://pkg.go.dev/github.com/dys2p/go-paypal)
+
 This library sets up a PayPal transaction and captures the transaction funds.
+
+- https://developer.paypal.com/docs/checkout/standard/
+- CSP: https://developer.paypal.com/sdk/js/configuration/
 
 `ShippingPreference` defaults to `NO_SHIPPING`, so the PayPal window won't show the shipping information. Our example code does not send any shipping information to PayPal.
 
