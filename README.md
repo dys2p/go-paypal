@@ -1,11 +1,8 @@
-# A PayPal API library written in Go
+# go-paypal
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/dys2p/go-paypal.svg)](https://pkg.go.dev/github.com/dys2p/go-paypal)
 
-This library sets up a PayPal transaction and captures the transaction funds.
-
-- https://developer.paypal.com/docs/checkout/standard/
-- CSP: https://developer.paypal.com/sdk/js/configuration/
+Package `paypal` sets up a PayPal transaction and captures the transaction funds.
 
 `ShippingPreference` defaults to `NO_SHIPPING`, so the PayPal window won't show the shipping information. Our example code does not send any shipping information to PayPal.
 
@@ -16,10 +13,10 @@ For the client side, follow:
 * [Set up a Transaction](https://developer.paypal.com/docs/checkout/reference/server-integration/set-up-transaction/)
 * [Capture Transaction Funds](https://developer.paypal.com/docs/checkout/reference/server-integration/capture-transaction/)
 
-On the server, first create a `paypal.Config` or load it from a JSON file:
+On the server, first create a `Config` or load it from a JSON file:
 
 ```
-paypalConfig, err := paypal.Load("paypal.json")
+config, err := paypal.Load("paypal.json")
 if err != nil {
 	return err
 }
@@ -29,13 +26,13 @@ Then set up a transaction:
 
 ```
 // authenticate
-authResult, err := paypalConfig.Auth()
+authResult, err := config.Auth()
 if err != nil {
 	return err
 }
 
 // call PayPal API to generate an order
-generateOrderResponse, err := paypalConfig.CreateOrder(authResult, amountInCents)
+generateOrderResponse, err := config.CreateOrder(authResult, amountInCents)
 if err != nil {
 	return err
 }
@@ -59,13 +56,13 @@ if err := json.NewDecoder(r.Body).Decode(captureRequest); err != nil {
 }
 
 // authenticate
-authResult, err := paypalConfig.Auth()
+authResult, err := config.Auth()
 if err != nil {
 	return err
 }
 
 // call PayPal to capture the funds
-captureResponse, err := paypalConfig.Capture(authResult, captureRequest.OrderID)
+captureResponse, err := config.Capture(authResult, captureRequest.OrderID)
 if err != nil {
 	return err
 }
